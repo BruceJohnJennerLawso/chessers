@@ -45,9 +45,10 @@ window.onload = function(){
     game.moveHorizontal = function(locPiece, locTile) {
         // checks to see if a piece can move horizontally legally
         var i = (locPiece < locTile) ? locPiece : locTile,
-            N = (locPiece < locTile) ? locTile : locPiece;
+            N = (locPiece < locTile) ? locTile : locPiece,
+            diff = locTile-locPiece;
 
-        if (Math.abs(locTile - locPiece) < 8) {
+        if (Math.abs(diff) < 8) {
             var leftEndTile = 8*Math.floor(locTile/8),
                 rightEndTile = leftEndTile + 7;
 
@@ -63,9 +64,10 @@ window.onload = function(){
     game.moveVertical = function(locPiece, locTile) {
         // checks to see if a piece can move vertically legally
         var i = (locPiece < locTile) ? locPiece : locTile,
-            N = (locPiece < locTile) ? locTile : locPiece;
+            N = (locPiece < locTile) ? locTile : locPiece,
+            diff = locTile-locPiece;
 
-        if (Math.abs(locTile - locPiece)%8 === 0)
+        if (Math.abs(diff)%8 === 0)
             return game.searchBetweenTiles(i,N,8);
 
         return false;
@@ -73,16 +75,16 @@ window.onload = function(){
 
     game.moveDiagonal = function(locPiece, locTile) {
         var i = (locPiece < locTile) ? locPiece : locTile,
-            N = (locPiece < locTile) ? locTile : locPiece;
+            N = (locPiece < locTile) ? locTile : locPiece,
+            diff = locTile-locPiece;
 
-        if (Math.abs(locTile - locPiece)%7 === 0)
+        if (Math.abs(diff)%7 === 0)
             return game.searchBetweenTiles(i,N,7);
-        else if (Math.abs(locTile - locPiece)%9 === 0)
+        else if (Math.abs(diff)%9 === 0)
             return game.searchBetweenTiles(i,N,9);
 
         return false;
     }
-
 
     game.checkLegalPawn = function(locPiece, locTile, hasMoved, occupied, pieceID) {
         /*
@@ -90,23 +92,24 @@ window.onload = function(){
         checks for standard movement (1 forward), abnormal movement (2 forward on first move) 
         and then for killing.
         */
+        var diff = locTile-locPiece;
 
         if (pieceID[0] === 'w') {
             // standard movement
-            if ((locTile - locPiece) === -8 && !occupied)
+            if (diff === -8 && !occupied)
                 return true;
             // first move can be two spaces forward
-            else if ((locTile - locPiece) === -16 && !occupied && !hasMoved)
+            else if (diff === -16 && !occupied && !hasMoved)
                 return true;
             // attacking
-            else if (((locTile - locPiece) === -7 || (locTile - locPiece) === -9) && occupied)
+            else if ((diff === -7 || diff === -9) && occupied)
                 return true;
         } else {
-            if ((locTile - locPiece) === 8 && !occupied)
+            if ((diff) === 8 && !occupied)
                 return true;
-            else if ((locTile - locPiece) === 16 && !occupied && !hasMoved)
+            else if (diff === 16 && !occupied && !hasMoved)
                 return true;
-            else if (((locTile - locPiece) === 7 || (locTile - locPiece) === 9) && occupied)
+            else if ((diff === 7 || diff === 9) && occupied)
                 return true;
         }
 
@@ -115,14 +118,13 @@ window.onload = function(){
 
     game.checkLegalKing = function(locPiece, locTile, hasMoved, occupied, pieceID) {
         // hasMoved will be required for castling.
+        var diff = locTile-locPiece;
+
         if (pieceID[0] === 'w') {
-            // standard movement
-            if ((locTile - locPiece) === -7 || (locTile - locPiece) === -8 || 
-                (locTile - locPiece) === -9)
+            if (diff === -7 || diff === -8 ||  diff === -9)
                 return true;
         } else {
-            if ((locTile - locPiece) === 7 || (locTile - locPiece) === 8 || 
-                (locTile - locPiece) === 9)
+            if (diff === 7 || diff === 8 || diff === 9)
                 return true;
         }
 
@@ -135,8 +137,8 @@ window.onload = function(){
     point and ending point).
     */
     game.checkLegalHorse = function(locPiece, locTile) {
-        if (Math.abs(locTile - locPiece) === 6 || Math.abs(locTile - locPiece) === 10 ||
-            Math.abs(locTile - locPiece) === 15 || Math.abs(locTile - locPiece) === 17)
+        if (Math.abs(diff) === 6 || Math.abs(diff) === 10 ||
+            Math.abs(diff) === 15 || Math.abs(diff) === 17)
             return true;
 
         return false;
@@ -155,9 +157,37 @@ window.onload = function(){
             game.moveDiagonal(locPiece, locTile));
     }
 
+    game.checkLegalChecker = function(locPiece, locTile, occupied, pieceID) {
+
+        if (occupied)
+            return false;
+
+        var diff = locTile-locPiece;
+
+        if (pieceID[0] === 'w') {
+            if (!piece.isKinged && (diff === -7 || diff === -9))
+                    return true;
+
+            else if (piece.isKinged && (Math.abs(diff) === 7 || Math.abs(diff) === 9))
+                    return true;
+
+        } else {
+            if (!piece.isKinged && (diff === 7 || diff === 9))
+                    return true;
+
+            else if (piece.isKinged && (Math.abs(diff) === 7 || Math.abs(diff) === 9))
+                    return true;
+        }
+
+        return false;
+    }
+
     game.isLegalMove = function(piece, tile) {
-        // use switch on a piece's type. call appropriate function.
+        // check for piece type. call appropriate function.
         pieceID = piece.id;
+        if (!piece.isChessPiece)
+            return game.checkLegalChecker(piece.loc, tile.loc, tile.occupied, pieceID);
+
         switch(pieceID[1]) {
 
             case 'p': // pawn
@@ -188,7 +218,6 @@ window.onload = function(){
                 return false;
         }
     }
-
     
     game.addTile = function(i,j,occupied) {
         var tile = new Sprite(16,16);
@@ -213,10 +242,30 @@ window.onload = function(){
 
                 if (game.isLegalMove(piece, this)) {
 
+                    // change piece attributes
                     if (!piece.hasMoved) piece.hasMoved = true;
+                    if (piece.id[0] === 'w') {
+                        // check for crossing the midpoint
+                        if (piece.isChessPiece && this.loc < 32)
+                            piece.isChessPiece = false; 
+                        else if (!piece.isChessPiece && this.loc >= 32)
+                            piece.isChessPiece = true;
+
+                        // check for reaching the end
+                        if (this.loc < 8 && !piece.isKinged)
+                            piece.isKinged = true;
+                    } else {
+                        if (piece.isChessPiece && this.loc >= 32)
+                            piece.isChessPiece = false;
+                        else if (!piece.isChessPiece && this.loc < 32)
+                            piece.isChessPiece = true;
+
+                        if (this.loc >= 56 && !piece.isKinged)
+                            piece.isKinged = true;
+                    }
+
                     var x = Math.floor(e.x/16),
                         y = Math.floor(e.y/16);
-                    // move piece
                     piece.x = 16*x;
                     piece.y = 16*y;
                     // update location info
@@ -241,7 +290,7 @@ window.onload = function(){
         piece.id = id; // e.g. bp1 (black pawn 1)
 
         piece.loc = Math.floor(x/16) + 8*Math.floor(y/16);  // grid number
-        piece.hasMoved = false; // useful for pawns, king, rooks
+        piece.hasMoved = false; // useful for pawns & castling
         piece.isChessPiece = true;
         piece.isKinged = false;
         game.locationsUsed.push(piece.loc);
@@ -252,7 +301,6 @@ window.onload = function(){
         });
         
         game.rootScene.addChild(piece);
-        
     }
     
     game.onload = function () {
@@ -267,7 +315,7 @@ window.onload = function(){
         }
         for (var j=6; j<8; j++) { // last two rows
             for (var i=0; i<8; i++)
-                game.addTile(i,j,true);
+                game.addTile(i,j,false);
         }
         
         game.addPiece(64,0,0,"bk1");

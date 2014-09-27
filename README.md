@@ -7,9 +7,9 @@ A game created by a couple of physics students at the University of Waterloo. Ha
 The game currently supports all legal chess moves (moves only - not killing pieces).
 
 ### TODO (in some sort of order):
-- ~~basic move checking (i.e. pieces moving in the proper way regardless of other spaces being occupied or blocking)~~ done for pieces
-- basic move checking for checkers pieces (this will be ez)
-- ~~advanced move checking (i.e. pieces being in between start and end point, tiles being occupied)~~ done for chess pieces
+- ~~basic move checking for chess pieces~~
+- ~~basic move checking for checkers pieces (this will be ez)~~
+- ~~advanced move checking (i.e. pieces being in between start and end point)~~
 - killing
 - kill chain
 - socket stuff running for multiplayer
