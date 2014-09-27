@@ -5,7 +5,7 @@ enchant();
 
 window.onload = function(){
     var game = new Core(128, 128);
-    game.fps = 15;
+    game.fps = 5;
     game.preload('/public/img/tileset1.png');
     game.preload('/public/img/icon1.png');
     
@@ -26,6 +26,17 @@ window.onload = function(){
         // i.e. rook, queen, and bishop movements (horizontal/vertical/diagonal)
         for (var i=start+step; i<end; i+=step) {
             if (game.locationsUsed.indexOf(i) !== -1)
+                return false;
+        }
+        return true;
+    }
+
+    game.searchBetweenTilesNEIGH = function(arr) {
+        // lol function name
+        // given array of grid numbers, searches if those are being used
+        // used for knights (horses) because fuck those guys seriously
+        for (var i = 0; i < arr.length; i++) {
+            if (games.locationsUsed.indexOf(arr[i]) !== -1)
                 return false;
         }
         return true;
@@ -53,7 +64,7 @@ window.onload = function(){
         // checks to see if a piece can move vertically legally
         var i = (locPiece < locTile) ? locPiece : locTile,
             N = (locPiece < locTile) ? locTile : locPiece;
-            
+
         if (Math.abs(locTile - locPiece)%8 === 0)
             return game.searchBetweenTiles(i,N,8);
 
@@ -102,11 +113,35 @@ window.onload = function(){
         return false;
     }
 
+    game.checkLegalKing = function(locPiece, locTile, hasMoved, occupied, pieceID) {
+        // hasMoved will be required for castling.
+        if (pieceID[0] === 'w') {
+            // standard movement
+            if ((locTile - locPiece) === -7 || (locTile - locPiece) === -8 || 
+                (locTile - locPiece) === -9)
+                return true;
+        } else {
+            if ((locTile - locPiece) === 7 || (locTile - locPiece) === 8 || 
+                (locTile - locPiece) === 9)
+                return true;
+        }
+
+        return false;
+    }
+
     /*
     All other pieces follow the same format: check for correct movement, then check to see if 
     anything was actually blocking its movement (check for tile occupation in between starting 
     point and ending point).
     */
+    game.checkLegalHorse = function(locPiece, locTile) {
+        if (Math.abs(locTile - locPiece) === 6 || Math.abs(locTile - locPiece) === 10 ||
+            Math.abs(locTile - locPiece) === 15 || Math.abs(locTile - locPiece) === 17)
+            return true;
+
+        return false;
+    }
+
     game.checkLegalRook = function(locPiece, locTile) {
         return (game.moveHorizontal(locPiece, locTile) || game.moveVertical(locPiece, locTile));
     }
@@ -116,7 +151,8 @@ window.onload = function(){
     }
 
     game.checkLegalQueen = function(locPiece, locTile) {
-        return (game.moveVertical(locPiece, locTile) || game.moveHorizontal(locPiece, locTile) || game.moveDiagonal(locPiece, locTile));
+        return (game.moveVertical(locPiece, locTile) || game.moveHorizontal(locPiece, locTile) || 
+            game.moveDiagonal(locPiece, locTile));
     }
 
     game.isLegalMove = function(piece, tile) {
@@ -138,6 +174,14 @@ window.onload = function(){
 
             case 'q':
                 return game.checkLegalQueen(piece.loc, tile.loc);
+                break;
+
+            case 'h':
+                return game.checkLegalHorse(piece.loc, tile.loc);
+                break;
+
+            case 'k':
+                return game.checkLegalKing(piece.loc, tile.loc, piece.hasMoved, tile.occupied, pieceID);
                 break;
 
             default:
@@ -226,10 +270,12 @@ window.onload = function(){
                 game.addTile(i,j,true);
         }
         
+        game.addPiece(64,0,0,"bk1");
         game.addPiece(16,16,5,"bp1");
-        game.addPiece(32,16,6,"br1");
-        game.addPiece(64,16,7,"bb1");
-        game.addPiece(80,16,1,"bq1");
+        game.addPiece(0,0,6,"br1");
+        game.addPiece(32,0,7,"bb1");
+        game.addPiece(48,0,1,"bq1");
+        game.addPiece(16,0,2,"bh1");
     }
     
     game.start();
