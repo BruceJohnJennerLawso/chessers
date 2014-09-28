@@ -4,13 +4,13 @@ Chessers
 A game created by a couple of physics students at the University of Waterloo. Half Checkers, half Chess. What else is there to get?
 
 ## Development Status
-The game currently supports all legal chess moves (moves only - not killing pieces).
+The game currently supports all basic legal movements and chess pieces taking other pieces.
 
 ### TODO (in some sort of order):
 - ~~basic move checking for chess pieces~~
 - ~~basic move checking for checkers pieces (this will be ez)~~
 - ~~advanced move checking (i.e. pieces being in between start and end point)~~
-- killing
+- ~~killing~~ DONE FOR SOME PIECES
 - kill chain
 - socket stuff running for multiplayer
 - checkmate
