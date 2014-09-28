@@ -15,8 +15,9 @@ window.onload = function(){
     game.myTurn = false;
     game.player = 1; // 0 for white, 1 for black, will be null initially - may not be needed
 
-    game.locationsUsed = [];
-
+    game.tileInfo = {0:'br',1:'bh',2:'bb',3:'bq',4:'bk',5:null,6:null,7:null,8:null,9:'bp1'};
+    for (var i=10; i<64; i++)
+        game.tileInfo[i] = null;
 
 
     // ****** CHECKING FOR LEGALITY STARTS HERE ******
@@ -25,7 +26,7 @@ window.onload = function(){
         // searches between (exclusive) tiles - only allows for linear searches
         // i.e. rook, queen, and bishop movements (horizontal/vertical/diagonal)
         for (var i=start+step; i<end; i+=step) {
-            if (game.locationsUsed.indexOf(i) !== -1)
+            if (game.tileInfo[i] !== null)
                 return false;
         }
         return true;
@@ -36,7 +37,7 @@ window.onload = function(){
         // given array of grid numbers, searches if those are being used
         // used for knights (horses) because fuck those guys seriously
         for (var i = 0; i < arr.length; i++) {
-            if (games.locationsUsed.indexOf(arr[i]) !== -1)
+            if (games.tileInfo[i] !== null)
                 return false;
         }
         return true;
@@ -100,7 +101,7 @@ window.onload = function(){
                 return true;
             // first move can be two spaces forward
             else if (diff === -16 && !occupied && !hasMoved)
-                return true;
+                return game.moveVertical(locPiece,locTile);
             // attacking
             else if ((diff === -7 || diff === -9) && occupied)
                 return true;
@@ -108,7 +109,7 @@ window.onload = function(){
             if ((diff) === 8 && !occupied)
                 return true;
             else if (diff === 16 && !occupied && !hasMoved)
-                return true;
+                return game.moveVertical(locPiece,locTile);
             else if ((diff === 7 || diff === 9) && occupied)
                 return true;
         }
@@ -137,6 +138,8 @@ window.onload = function(){
     point and ending point).
     */
     game.checkLegalHorse = function(locPiece, locTile) {
+        var diff = locTile-locPiece;
+
         if (Math.abs(diff) === 6 || Math.abs(diff) === 10 ||
             Math.abs(diff) === 15 || Math.abs(diff) === 17)
             return true;
@@ -167,14 +170,12 @@ window.onload = function(){
         if (pieceID[0] === 'w') {
             if (!piece.isKinged && (diff === -7 || diff === -9))
                     return true;
-
             else if (piece.isKinged && (Math.abs(diff) === 7 || Math.abs(diff) === 9))
                     return true;
 
         } else {
             if (!piece.isKinged && (diff === 7 || diff === 9))
                     return true;
-
             else if (piece.isKinged && (Math.abs(diff) === 7 || Math.abs(diff) === 9))
                     return true;
         }
@@ -182,36 +183,36 @@ window.onload = function(){
         return false;
     }
 
-    game.isLegalMove = function(piece, tile) {
+    game.isLegalMove = function(piece, locTile, occupied) {
         // check for piece type. call appropriate function.
         pieceID = piece.id;
         if (!piece.isChessPiece)
-            return game.checkLegalChecker(piece.loc, tile.loc, tile.occupied, pieceID);
+            return game.checkLegalChecker(piece.loc, locTile, occupied, pieceID);
 
         switch(pieceID[1]) {
 
             case 'p': // pawn
-                return game.checkLegalPawn(piece.loc, tile.loc, piece.hasMoved, tile.occupied, pieceID);
+                return game.checkLegalPawn(piece.loc, locTile, piece.hasMoved, occupied, pieceID);
                 break;
 
             case 'r': // rook
-                return game.checkLegalRook(piece.loc, tile.loc);
+                return game.checkLegalRook(piece.loc, locTile);
                 break;
 
             case 'b': // bishop
-                return game.checkLegalBishop(piece.loc, tile.loc);
+                return game.checkLegalBishop(piece.loc, locTile);
                 break;
 
             case 'q':
-                return game.checkLegalQueen(piece.loc, tile.loc);
+                return game.checkLegalQueen(piece.loc, locTile);
                 break;
 
             case 'h':
-                return game.checkLegalHorse(piece.loc, tile.loc);
+                return game.checkLegalHorse(piece.loc, locTile);
                 break;
 
             case 'k':
-                return game.checkLegalKing(piece.loc, tile.loc, piece.hasMoved, tile.occupied, pieceID);
+                return game.checkLegalKing(piece.loc, locTile, piece.hasMoved, occupied, pieceID);
                 break;
 
             default:
@@ -240,7 +241,7 @@ window.onload = function(){
             if (game.isPieceSelected) {
                 piece = game.activePiece;
 
-                if (game.isLegalMove(piece, this)) {
+                if (game.isLegalMove(piece, this.loc, this.occupied)) {
 
                     // change piece attributes
                     if (!piece.hasMoved) piece.hasMoved = true;
@@ -269,9 +270,9 @@ window.onload = function(){
                     piece.x = 16*x;
                     piece.y = 16*y;
                     // update location info
-                    game.locationsUsed.pop(game.locationsUsed.indexOf(piece.loc));
+                    game.tileInfo[piece.loc] = null;
                     piece.loc = x + 8*y;
-                    game.locationsUsed.push(piece.loc);
+                    game.tileInfo[piece.loc] = piece.id;
                     // no piece should be selected anymore
                     game.isPieceSelected = false;
                 }
@@ -293,7 +294,7 @@ window.onload = function(){
         piece.hasMoved = false; // useful for pawns & castling
         piece.isChessPiece = true;
         piece.isKinged = false;
-        game.locationsUsed.push(piece.loc);
+        game.tileInfo[piece.loc] = piece.id;
         
         piece.addEventListener(Event.TOUCH_START, function() {
             game.isPieceSelected = true;
