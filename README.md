@@ -4,7 +4,7 @@ Chessers
 A game created by a couple of physics students at the University of Waterloo. Half Checkers, half Chess. What else is there to get?
 
 ## Development Status
-The game currently supports all basic legal movements and chess pieces taking other pieces.
+The game currently supports all basic legal movements, as well as pieces being taken. Kill-chains (i.e. double/triple/etc. jumping) are technically supported, but that's only because we don't have a turn mechanic in place yet.
 
 ### TODO (in some sort of order):
 - ~~basic move checking for chess pieces~~
@@ -29,9 +29,13 @@ The only other rule to the game is actually an alteration to the way the Chess k
 
 Besides those rules, standard Chess and Checkers rules apply. We will be trying to take all of the subtle features in Chess into account, such as castling, pawn promotion, and en passant (who the fuck even uses this?) If you don't know the rules of one of the games, don't come complaining to us about how your piece can't move backwards after becoming a Checkers piece. That's like the main rule of Checkers, dude.
 
+Diagrams will be added at some point in the future.
+
 ## Contributors
 
-Originally played by Nick Kuzmin and Kelly Ryan as a literal "Chess vs. Checkers" game, where one person played Chess and the other played Checkers on the same board. It became clear very quickly that Chess pieces were far too overpowered and needed to be nerfed. And thus, Chessers was born. After exhaustive testing with Nick, Kelly, Dylan Funk and Dakota St. Laurent (the "Chessers Board of Directors" as it was known), as well as many others, and ridiculous rules added and removed, something half-respectable came out.
+Originally played by Nick Kuzmin and Kelly Ryan as a literal "Chess vs. Checkers" game, where one person played Chess and the other played Checkers on the same board. It became clear very quickly that Chess pieces were far too overpowered and needed to be nerfed. And thus, Chessers was born. After exhaustive testing with Nick, Kelly, Dylan Funk, Dakota St. Laurent and Matthew Taylor (the "Chessers Board of Directors" as it was known), as well as many others, and ridiculous rules added and removed, something half-respectable came out.
+
+Coded by Dakota St. Laurent and Kelly Ryan. Current art is from code.9leap.net, but real sprites will be added later.
 
 ## Reviews
 
