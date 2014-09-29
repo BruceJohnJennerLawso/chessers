@@ -10,7 +10,7 @@ The game currently supports all basic legal movements and chess pieces taking ot
 - ~~basic move checking for chess pieces~~
 - ~~basic move checking for checkers pieces (this will be ez)~~
 - ~~advanced move checking (i.e. pieces being in between start and end point)~~
-- ~~killing~~ DONE FOR SOME PIECES
+- ~~killing~~
 - kill chain
 - socket stuff running for multiplayer
 - checkmate

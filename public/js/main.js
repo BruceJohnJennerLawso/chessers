@@ -17,7 +17,7 @@ window.onload = function(){
 
     // game.tileInfo = {0:'br',1:'bh',2:'bb',3:'bq',4:'bk',5:null,6:null,7:null,8:null,9:'bp1'};
     game.tileInfo = {};
-    for (var i=10; i<64; i++)
+    for (var i=16; i<48; i++)
         game.tileInfo[i] = null;
 
     var frames = [6,2,7,1,0,7,2,6],
@@ -68,9 +68,7 @@ window.onload = function(){
         return piece;
     }
 
-
     // ****** CHECKING FOR LEGALITY STARTS HERE ******
-
     game.searchBetweenTiles = function(start, end, step) {
         // searches between (exclusive) tiles - only allows for linear searches
         // i.e. rook, queen, and bishop movements (horizontal/vertical/diagonal)
@@ -279,7 +277,6 @@ window.onload = function(){
         
         tile.occupied = occupied; // initial state of tile
         tile.loc = i + 8*j;       // grid number
-        // tile.piece = (tile.loc < 16 || tile.loc >= 48) ? game.addPiece(i,j,pieceFrame,pieceID) : null;
         tile.piece = null;
         
         tile.addEventListener(Event.TOUCH_START, function(e) {
@@ -288,18 +285,19 @@ window.onload = function(){
                 piece = game.activePiece;
 
                 if (game.isLegalMove(piece, this.loc, this.occupied)) {
+                    game.allTiles[piece.loc].piece = null;
                     piece = game.movePiece(piece, this, e);
+                    this.piece = piece;
                     return;
                 }
 
-                /*
                 if (!piece.isChessPiece) {
                     var locPiece = piece.loc,
                         locTile = this.loc,
                         diff = locTile-locPiece,
                         flag = false;
 
-                    if (pieceID[0] === 'w') {
+                    if (piece.id[0] === 'w') {
                         if ((!piece.isKinged && (diff === -14 || diff === -18)) || 
                             (piece.isKinged && (Math.abs(diff) === 14 || Math.abs(diff) === 18)))
                                 flag = true;
@@ -310,10 +308,13 @@ window.onload = function(){
                     }
 
                     if (flag) {
-                        game.rootScene.remove()
+                        var locKilledPiece = parseInt(Math.abs(locPiece+locTile)/2);
+                        game.rootScene.removeChild(game.allTiles[locKilledPiece].piece);
+                        piece = game.movePiece(piece, this, e);
+                        this.piece = piece;
+                        return;
                     }
                 }
-                */
             }
         });
         return tile;
@@ -333,7 +334,7 @@ window.onload = function(){
         piece.isKinged = false;
         game.tileInfo[piece.loc] = piece.id;
         
-        piece.addEventListener(Event.TOUCH_START, function(e) {
+        piece.addEventListener(Event.TOUCH_END, function(e) {
 
             if (game.isPieceSelected) {
                 var activePiece = game.activePiece;
@@ -356,25 +357,23 @@ window.onload = function(){
         });
         return piece;
     }
+
+    game.addGameObjects = function(i, j, occupied, pieceFrame, pieceID) {
+        var tile = game.createTile(i,j,occupied),
+            piece = game.createPiece(i,j,pieceFrame,pieceID);
+        tile.piece = piece;
+        game.allTiles[tile.loc] = tile;
+        game.rootScene.addChild(tile);
+        game.allPieces[piece.loc] = piece;
+    }
     
     game.onload = function () {
-
-        for (var i=0; i<8; i++) {
-            var tile = game.createTile(i,0,true),
-                piece = game.createPiece(i,0,frames[i],idBlack[i]);
-            tile.piece = piece;
-            game.allTiles[tile.loc] = tile;
-            game.rootScene.addChild(tile);
-            game.allPieces[piece.loc] = piece;
-        }
-        for (var i=0; i<8; i++) {
-            var tile = game.createTile(i,1,true),
-                piece = game.createPiece(i,1,5,'bp');
-            tile.piece = piece;
-            game.allTiles[tile.loc] = tile;
-            game.rootScene.addChild(tile);
-            game.allPieces[8+piece.loc] = piece;
-        }
+        // for for for for for for for
+        // create tiles and pieces
+        for (var i=0; i<8; i++)
+            game.addGameObjects(i,0,true,frames[i],idBlack[i]);
+        for (var i=0; i<8; i++)
+            game.addGameObjects(i,1,true,5,'bp');
         for (var j=2; j<6; j++) {
             for (var i=0; i<8; i++) {
                 var tile = game.createTile(i,j,false);
@@ -382,26 +381,13 @@ window.onload = function(){
                 game.rootScene.addChild(tile);
             }
         }
-        for (var i=0; i<8; i++) {
-            var tile = game.createTile(i,6,true),
-                piece = game.createPiece(i,6,5,'wp');
-            tile.piece = piece;
-            game.allTiles[tile.loc] = tile;
-            game.rootScene.addChild(tile);
-            game.allPieces[48+piece.loc] = piece;
-        }
-        for (var i=0; i<8; i++) {
-            var tile = game.createTile(i,7,true),
-                piece = game.createPiece(i,7,frames[i],idWhite[i]);
-            tile.piece = piece;
-            game.allTiles[tile.loc] = tile;
-            game.rootScene.addChild(tile);
-            game.allPieces[56+piece.loc] = piece;
-        }
+        for (var i=0; i<8; i++)
+            game.addGameObjects(i,6,true,5,'wp');
+        for (var i=0; i<8; i++)
+            game.addGameObjects(i,7,true,frames[i],idWhite[i]);
 
-        for (var key in game.allPieces) {
+        for (var key in game.allPieces)
             game.rootScene.addChild(game.allPieces[key]);
-        };
     }
     
     game.start();
