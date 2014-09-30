@@ -14,9 +14,8 @@ The game currently supports all basic legal movements, as well as pieces being t
 - kill chain
 - socket stuff running for multiplayer
 - checkmate
-- castling
+- ~~castling~~
 - pawn promotion
-- en passant
 
 ## Rules
 The game derives its playstyle from both games, as you might have guessed. The rules are (not so) simple. 
@@ -27,7 +26,7 @@ That being said, your piece is allowed to move PAST the center line as a Chess p
 
 The only other rule to the game is actually an alteration to the way the Chess king can move. The king may only move forward or diagonally foward.
 
-Besides those rules, standard Chess and Checkers rules apply. We will be trying to take all of the subtle features in Chess into account, such as castling, pawn promotion, and en passant (who the fuck even uses this?) If you don't know the rules of one of the games, don't come complaining to us about how your piece can't move backwards after becoming a Checkers piece. That's like the main rule of Checkers, dude.
+Besides those rules, standard Chess and Checkers rules apply. We will be trying to take all of the subtle features in Chess into account, such as castling, pawn promotion, but NOT en passant (see https://github.com/kelly-ry4n/chessers/issues/3). If you don't know the rules of one of the games, don't come complaining to us about how your piece can't move backwards after becoming a Checkers piece. That's like the main rule of Checkers, dude.
 
 Diagrams will be added at some point in the future.
 

@@ -8,6 +8,7 @@ window.onload = function(){
     game.fps = 5;
     game.preload('/public/img/tileset1.png');
     game.preload('/public/img/icon1.png');
+    game.preload('/public/img/icon2.png');
     
     game.isPieceSelected = false;
     game.activePiece = null;
@@ -47,11 +48,11 @@ window.onload = function(){
                 piece.isKinged = true;
         }
 
-        var x = Math.floor(e.x/16),
-            y = Math.floor(e.y/16);
-        piece.x = 16*x;
-        piece.y = 16*y;
-        piece.loc = x + 8*y;
+        // var x = Math.floor(e.x/16),
+        //     y = Math.floor(e.y/16);
+        piece.x = tile.x;
+        piece.y = tile.y;
+        piece.loc = tile.loc;
         tile.piece = piece;
 
         return piece;
@@ -156,18 +157,44 @@ window.onload = function(){
     game.checkLegalKing = function(locPiece, locTile, hasMoved, occupied, pieceID) {
         /* checks to see if a king can move legally. killing is included. */
         // hasMoved will be required for castling.
-        var diff = locTile-locPiece;
+        var diff = locTile-locPiece,
+            locRook,
+            locRookNew;
 
+        // check basic movement and killing
         if (pieceID[0] === 'w') {
             if ((!occupied && (diff === -7 || diff === -8 ||  diff === -9)) ||
                 (occupied && (Math.abs(diff) === 1 || Math.abs(diff) === 7 || 
                     Math.abs(diff) === 8 || Math.abs(diff) === 9)))
                 return true;
+
+            locRook = (locTile === 58) ? 56 : 63;
+
         } else {
             if ((!occupied && (diff === 7 || diff === 8 ||  diff === 9)) ||
                 (occupied && (Math.abs(diff) === 1 || Math.abs(diff) === 7 || 
                     Math.abs(diff) === 8 || Math.abs(diff) === 9)))
                 return true;
+
+            locRook = (locTile === 2) ? 0 : 7;
+        }
+
+        // check for castling
+        if (Math.abs(diff) === 2 && !hasMoved) {
+            var rook = game.tiles[locRook].piece;
+
+            if (rook.id[1] === 'r' && game.moveHorizontal(locPiece, locRook) && !rook.hasMoved) {
+
+                console.log(rook, locRook);
+
+                if (locRook >= 56)
+                    locRook = (locTile === 58) ? 59 : 61;
+                else
+                    locRook = (locTile === 2) ? 3 : 5;
+
+                game.movePiece(rook, game.tiles[locRook]);
+                return true;
+            }
         }
         return false;
     }
@@ -220,36 +247,39 @@ window.onload = function(){
         return false;
     }
 
-    game.isLegalMove = function(piece, locTile, occupied) {
+    game.isLegalMove = function(piece, tile, occupied) {
         // check for piece type. call appropriate function.
-        pieceID = piece.id;
+        var pieceID = piece.id,
+            locTile = tile.loc,
+            locPiece = piece.loc;
+
         if (!piece.isChessPiece)
-            return game.checkLegalChecker(piece.loc, locTile, occupied, pieceID);
+            return game.checkLegalChecker(locPiece, locTile, occupied, pieceID);
 
         switch(pieceID[1]) {
 
             case 'p': // pawn
-                return game.checkLegalPawn(piece.loc, locTile, piece.hasMoved, occupied, pieceID);
+                return game.checkLegalPawn(locPiece, locTile, piece.hasMoved, occupied, pieceID);
                 break;
 
             case 'r': // rook
-                return game.checkLegalRook(piece.loc, locTile);
+                return game.checkLegalRook(locPiece, locTile);
                 break;
 
             case 'b': // bishop
-                return game.checkLegalBishop(piece.loc, locTile);
+                return game.checkLegalBishop(locPiece, locTile);
                 break;
 
             case 'q':
-                return game.checkLegalQueen(piece.loc, locTile);
+                return game.checkLegalQueen(locPiece, locTile);
                 break;
 
             case 'h':
-                return game.checkLegalHorse(piece.loc, locTile);
+                return game.checkLegalHorse(locPiece, locTile);
                 break;
 
             case 'k':
-                return game.checkLegalKing(piece.loc, locTile, piece.hasMoved, occupied, pieceID);
+                return game.checkLegalKing(locPiece, locTile, piece.hasMoved, occupied, pieceID);
                 break;
 
             default:
@@ -258,15 +288,22 @@ window.onload = function(){
     }
 
     game.killPiece = function(locTile) {
-        /* this is called when a piece is taken. */
+        /* removes a piece based off its location (underlying tile).
+            this is called when a piece is taken. */
         game.rootScene.removeChild(game.tiles[locTile].piece);
-        game.tiles[locTile].occupied = false;
+        game.resetTileState(locTile);
     }
 
     game.resetBoardThing = function() {
-        /* this function is also called after a piece is taken. */
+        /* this function is called after a piece moves or a piece is taken. */
         game.activePiece = null;
         game.isPieceSelected = false;
+    }
+
+    game.resetTileState = function(locTile) {
+        /* removes tile's pointer to its occupying piece after it moves. */
+        game.tiles[locTile].occupied = false;
+        game.tiles[locTile].piece = null;
     }
     
     game.createTile = function(i, j, occupied) {
@@ -287,24 +324,42 @@ window.onload = function(){
         
         tile.addEventListener(Event.TOUCH_START, function(e) {
 
-            console.log(this.loc, this.occupied);
+            console.log(this.occupied, this.piece, this.loc);
 
             if (game.isPieceSelected) {
                 piece = game.activePiece;
 
-                if (game.isLegalMove(piece, this.loc, this.occupied)) {
-                    game.tiles[piece.loc].piece = null;
-                    game.tiles[piece.loc].occupied = false;
-                    piece = game.movePiece(piece, this, e);
-                    this.piece = piece;
+                var locPiece = piece.loc,
+                    locTile = this.loc,
+                    diff = locTile-locPiece;
+
+                if (game.isLegalMove(piece, this, this.occupied)) {
+                    game.resetTileState(piece.loc);
+                    this.piece = game.movePiece(piece, this, e);
+                    game.resetBoardThing();
                     return;
+
+                } else if (piece.id[1] === 'k' && Math.abs(diff) === 2 && !piece.hasMoved) {
+                    var locRook;
+                    if (piece.id[0] === 'w')
+                        locRook = (locTile===58) ? 56 : 63;
+                    else
+                        locRook = (locTile===2) ? 0 : 7;
+
+                    var rook = game.tiles[locRook].piece;
+
+                    if (rook.id[1] === 'r' && game.moveHorizontal(locPiece, locRook) && !rook.hasMoved) {
+                        this.piece = game.movePiece(piece, this, e);
+                        if (locRook > 56)
+                            locRook = (locTile === 58) ? 59 : 61;
+                        else
+                            locRook = (locTile === 2) ? 3 : 5;
+
+                    }
                 }
 
                 if (!piece.isChessPiece) {
-                    var locPiece = piece.loc,
-                        locTile = this.loc,
-                        diff = locTile-locPiece,
-                        flag = false;
+                    var flag = false;
 
                     if (piece.id[0] === 'w') {
                         if ((!piece.isKinged && (diff === -14 || diff === -18)) || 
@@ -331,7 +386,8 @@ window.onload = function(){
     
     game.createPiece = function(x, y, frame, id) {
         var piece = new Sprite(16,16);
-        piece.image = game.assets['/public/img/icon1.png'];
+        piece.image = (id[0] === 'w') ? game.assets['/public/img/icon1.png'] : 
+                        game.assets['/public/img/icon2.png'];
         piece.frame = frame;
         piece.x = 16*x;
         piece.y = 16*y;
@@ -344,15 +400,19 @@ window.onload = function(){
         
         piece.addEventListener(Event.TOUCH_END, function(e) {
 
+            console.log(piece.id);
+
             if (game.isPieceSelected) {
                 var activePiece = game.activePiece;
 
+                // if the two pieces are the same colour, just change active piece;
+                // unless first piece is a king, then player could be trying to castle.
                 if (this.id[0] === activePiece.id[0]) {
                     game.activePiece = this;
                     return;
                 }
 
-                if (game.isLegalMove(activePiece, this.loc, true)) {
+                if (game.isLegalMove(activePiece, game.tiles[this.loc], true)) {
                     game.killPiece(this.loc);
                     game.movePiece(activePiece, game.tiles[this.loc], e);
                     game.resetBoardThing();
