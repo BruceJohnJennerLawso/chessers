@@ -7,8 +7,8 @@ window.onload = function(){
     var game = new Core(128, 128);
     game.fps = 5;
     game.preload('/public/img/tileset1.png');
-    game.preload('/public/img/icon1.png');
-    game.preload('/public/img/icon2.png');
+    game.preload('/public/img/icon1.png'); // white pieces
+    game.preload('/public/img/icon2.png'); // black pieces
     
     game.isPieceSelected = false;
     game.activePiece = null;
@@ -16,8 +16,7 @@ window.onload = function(){
     game.player = null;
 
     var frames = [6,2,7,1,0,7,2,6],
-        idBlack = ['br','bh','bb','bq','bk','bb','bh','br'],
-        idWhite = ['wr','wh','wb','wq','wk','wb','wh','wr'];
+        IDs = ['r','h','b','q','k','b','h','r'];
 
     game.tiles = {}; // {gridNumber: tileObject}
     game.pieces = {}; // {gridNumber: pieceObject}
@@ -60,9 +59,10 @@ window.onload = function(){
 
     // ****** CHECKING FOR LEGALITY STARTS HERE ******
     game.searchBetweenTiles = function(start, end, step) {
-        /* searches between (exclusive) tiles - only allows for linear searches
-           i.e. rook, queen, and bishop movements (horizontal/vertical/diagonal) */
-
+        /* 
+          searches between (exclusive) tiles - only allows for linear searches
+          i.e. rook, queen, and bishop movements (horizontal/vertical/diagonal)
+        */
         for (var i=start+step; i<end; i+=step) {
             if (game.tiles[i].piece !== null)
                 return false;
@@ -71,10 +71,11 @@ window.onload = function(){
     }
 
     game.searchBetweenTilesNEIGH = function(arr) {
-        /* lol function name
-           given array of grid numbers, searches if those are being used
-           used for knights (horses) because fuck those guys seriously */
-
+        /* 
+          lol function name
+          given array of grid numbers, searches if those are being used
+          used for knights (horses) because fuck those guys seriously
+        */
         for (var i = 0; i < arr.length; i++) {
             if (games.tiles[i].piece !== null)
                 return false;
@@ -82,9 +83,10 @@ window.onload = function(){
         return true;
     }
 
-    game.moveHorizontal = function(locPiece, locTile) {
-        /* checks to see if a piece can move horizontally legally */
-
+    game.checkHorizontalTiles = function(locPiece, locTile) {
+        /* 
+          checks to see if a piece can move horizontally legally
+        */
         var i = (locPiece < locTile) ? locPiece : locTile,
             N = (locPiece < locTile) ? locTile : locPiece,
             diff = locTile-locPiece;
@@ -101,9 +103,8 @@ window.onload = function(){
         return false;
     }
 
-    game.moveVertical = function(locPiece, locTile) {
+    game.checkVerticalTiles = function(locPiece, locTile) {
         /* checks to see if a piece can move vertically legally */
-
         var i = (locPiece < locTile) ? locPiece : locTile,
             N = (locPiece < locTile) ? locTile : locPiece,
             diff = locTile-locPiece;
@@ -114,7 +115,7 @@ window.onload = function(){
         return false;
     }
 
-    game.moveDiagonal = function(locPiece, locTile) {
+    game.checkDiagonalTiles = function(locPiece, locTile) {
         /* checks to see if a piece can move diagonally legally */
 
         var i = (locPiece < locTile) ? locPiece : locTile,
@@ -130,7 +131,9 @@ window.onload = function(){
     }
 
     game.checkLegalPawn = function(locPiece, locTile, hasMoved, occupied, pieceID) {
-        /* checks to see if a pawn can move legally. killing is included. */
+        /* 
+          checks to see if a pawn can move legally.
+        */
         var diff = locTile-locPiece;
 
         if (pieceID[0] === 'w') {
@@ -139,7 +142,7 @@ window.onload = function(){
                 return true;
             // first move can be two spaces forward
             else if (diff === -16 && !occupied && !hasMoved)
-                return game.moveVertical(locPiece,locTile);
+                return game.checkVerticalTiles(locPiece,locTile);
             // attacking
             else if ((diff === -7 || diff === -9) && occupied)
                 return true;
@@ -147,7 +150,7 @@ window.onload = function(){
             if ((diff) === 8 && !occupied)
                 return true;
             else if (diff === 16 && !occupied && !hasMoved)
-                return game.moveVertical(locPiece,locTile);
+                return game.checkVerticalTiles(locPiece,locTile);
             else if ((diff === 7 || diff === 9) && occupied)
                 return true;
         }
@@ -155,25 +158,25 @@ window.onload = function(){
     }
 
     game.checkLegalKing = function(locPiece, locTile, hasMoved, occupied, pieceID) {
-        /* checks to see if a king can move legally. killing is included. */
-        // hasMoved will be required for castling.
+        /*
+          checks to see if a king can move legally2.
+        */
         var diff = locTile-locPiece,
-            locRook,
-            locRookNew;
+            locRook;
 
         // check basic movement and killing
         if (pieceID[0] === 'w') {
-            if ((!occupied && (diff === -7 || diff === -8 ||  diff === -9)) ||
-                (occupied && (Math.abs(diff) === 1 || Math.abs(diff) === 7 || 
-                    Math.abs(diff) === 8 || Math.abs(diff) === 9)))
-                return true;
+            if ((!occupied && (diff === -7 || diff === -8 ||  diff === -9)) || // movement
+              (occupied && (Math.abs(diff) === 1 || Math.abs(diff) === 7 || // killing
+              Math.abs(diff) === 8 || Math.abs(diff) === 9)))               // killing
+                return true; // god, why have ye forsaken me
 
             locRook = (locTile === 58) ? 56 : 63;
 
         } else {
             if ((!occupied && (diff === 7 || diff === 8 ||  diff === 9)) ||
-                (occupied && (Math.abs(diff) === 1 || Math.abs(diff) === 7 || 
-                    Math.abs(diff) === 8 || Math.abs(diff) === 9)))
+              (occupied && (Math.abs(diff) === 1 || Math.abs(diff) === 7 || 
+              Math.abs(diff) === 8 || Math.abs(diff) === 9)))
                 return true;
 
             locRook = (locTile === 2) ? 0 : 7;
@@ -183,10 +186,7 @@ window.onload = function(){
         if (Math.abs(diff) === 2 && !hasMoved) {
             var rook = game.tiles[locRook].piece;
 
-            if (rook.id[1] === 'r' && game.moveHorizontal(locPiece, locRook) && !rook.hasMoved) {
-
-                console.log(rook, locRook);
-
+            if (rook.id[1] === 'r' && game.checkHorizontalTiles(locPiece, locRook) && !rook.hasMoved) {
                 if (locRook >= 56)
                     locRook = (locTile === 58) ? 59 : 61;
                 else
@@ -207,24 +207,26 @@ window.onload = function(){
     game.checkLegalHorse = function(locPiece, locTile) {
         var diff = locTile-locPiece;
 
-        if (Math.abs(diff) === 6 || Math.abs(diff) === 10 || Math.abs(diff) === 15 || 
-            Math.abs(diff) === 17)
+        if (Math.abs(diff) === 6 || Math.abs(diff) === 10 || 
+          Math.abs(diff) === 15 || Math.abs(diff) === 17)
             return true;
 
         return false;
     }
 
     game.checkLegalRook = function(locPiece, locTile) {
-        return (game.moveHorizontal(locPiece, locTile) || game.moveVertical(locPiece, locTile));
+        return (game.checkHorizontalTiles(locPiece, locTile) || 
+            game.checkVerticalTiles(locPiece, locTile));
     }
 
     game.checkLegalBishop = function(locPiece, locTile) {
-        return game.moveDiagonal(locPiece, locTile);
+        return game.checkDiagonalTiles(locPiece, locTile);
     }
 
     game.checkLegalQueen = function(locPiece, locTile) {
-        return (game.moveVertical(locPiece, locTile) || game.moveHorizontal(locPiece, locTile) || 
-            game.moveDiagonal(locPiece, locTile));
+        return (game.checkVerticalTiles(locPiece, locTile) || 
+            game.checkHorizontalTiles(locPiece, locTile) || 
+            game.checkDiagonalTiles(locPiece, locTile));
     }
 
     game.checkLegalChecker = function(locPiece, locTile, occupied, pieceID) {
@@ -235,20 +237,23 @@ window.onload = function(){
 
         if (pieceID[0] === 'w') {
             if (!piece.isKinged && (diff === -7 || diff === -9))
-                    return true;
+                return true;
             else if (piece.isKinged && (Math.abs(diff) === 7 || Math.abs(diff) === 9))
-                    return true;
+                return true;
         } else {
             if (!piece.isKinged && (diff === 7 || diff === 9))
-                    return true;
+                return true;
             else if (piece.isKinged && (Math.abs(diff) === 7 || Math.abs(diff) === 9))
-                    return true;
+                return true;
         }
         return false;
     }
 
     game.isLegalMove = function(piece, tile, occupied) {
-        // check for piece type. call appropriate function.
+        /*
+          check to see if a piece's move is legal.
+          essentially, call appropriate function.
+        */
         var pieceID = piece.id,
             locTile = tile.loc,
             locPiece = piece.loc;
@@ -288,25 +293,39 @@ window.onload = function(){
     }
 
     game.killPiece = function(locTile) {
-        /* removes a piece based off its location (underlying tile).
-            this is called when a piece is taken. */
+        /*
+          removes a piece based off its location (underlying tile).
+          this is called when a piece is taken.
+        */
         game.rootScene.removeChild(game.tiles[locTile].piece);
         game.resetTileState(locTile);
     }
 
-    game.resetBoardThing = function() {
-        /* this function is called after a piece moves or a piece is taken. */
+    game.resetBoardAttributes = function() {
+        /*
+          this function is called after a piece moves or a piece is taken.
+        */
         game.activePiece = null;
         game.isPieceSelected = false;
     }
 
     game.resetTileState = function(locTile) {
-        /* removes tile's pointer to its occupying piece after it moves. */
+        /* 
+          removes tile's pointer to its occupying piece after it moves.
+        */
         game.tiles[locTile].occupied = false;
         game.tiles[locTile].piece = null;
     }
     
     game.createTile = function(i, j, occupied) {
+        /*
+          create a tile. attributes:
+          - (object) piece: piece occupying tile.
+          - (int) loc: grid number between 0 and 63 (inclusive). this represents
+                        the location of the tile, where 0 is top left corner and 
+                        63 is bottom right corner.
+          - (bool) occupied: true if tile has piece occupying it, false otherwise.
+        */
         var tile = new Sprite(16,16);
         tile.image = game.assets['/public/img/tileset1.png'];
         tile.x = 16*i;
@@ -324,8 +343,6 @@ window.onload = function(){
         
         tile.addEventListener(Event.TOUCH_START, function(e) {
 
-            console.log(this.occupied, this.piece, this.loc);
-
             if (game.isPieceSelected) {
                 piece = game.activePiece;
 
@@ -333,49 +350,33 @@ window.onload = function(){
                     locTile = this.loc,
                     diff = locTile-locPiece;
 
+                // checks for basic movement
                 if (game.isLegalMove(piece, this, this.occupied)) {
                     game.resetTileState(piece.loc);
                     this.piece = game.movePiece(piece, this, e);
-                    game.resetBoardThing();
+                    game.resetBoardAttributes();
                     return;
-
-                } else if (piece.id[1] === 'k' && Math.abs(diff) === 2 && !piece.hasMoved) {
-                    var locRook;
-                    if (piece.id[0] === 'w')
-                        locRook = (locTile===58) ? 56 : 63;
-                    else
-                        locRook = (locTile===2) ? 0 : 7;
-
-                    var rook = game.tiles[locRook].piece;
-
-                    if (rook.id[1] === 'r' && game.moveHorizontal(locPiece, locRook) && !rook.hasMoved) {
-                        this.piece = game.movePiece(piece, this, e);
-                        if (locRook > 56)
-                            locRook = (locTile === 58) ? 59 : 61;
-                        else
-                            locRook = (locTile === 2) ? 3 : 5;
-
-                    }
                 }
 
+                // checks for checkers pieces jumping
                 if (!piece.isChessPiece) {
                     var flag = false;
 
                     if (piece.id[0] === 'w') {
-                        if ((!piece.isKinged && (diff === -14 || diff === -18)) || 
-                            (piece.isKinged && (Math.abs(diff) === 14 || Math.abs(diff) === 18)))
-                                flag = true;
+                        if ((!piece.isKinged && (diff === -14 || diff === -18)) || // unkinged jump
+                          (piece.isKinged && (Math.abs(diff) === 14 || Math.abs(diff) === 18))) // kinged jump
+                            flag = true;
                     } else {
                         if ((!piece.isKinged && (diff === 14 || diff === 18)) || 
-                            (piece.isKinged && (Math.abs(diff) === 14 || Math.abs(diff) === 18)))
-                                flag = true;
+                          (piece.isKinged && (Math.abs(diff) === 14 || Math.abs(diff) === 18)))
+                            flag = true;
                     }
 
                     if (flag) {
                         var locKilledPiece = parseInt(Math.abs(locPiece+locTile)/2);
                         game.killPiece(locKilledPiece);
                         game.movePiece(piece, tile, e);
-                        game.resetBoardThing();
+                        game.resetBoardAttributes();
                         return;
                     }
                 }
@@ -385,6 +386,16 @@ window.onload = function(){
     }
     
     game.createPiece = function(x, y, frame, id) {
+        /*
+          create a piece. attributes:
+          - (str) id: easy way to represent type of piece.
+                      e.g. black pawn --> 'bp'
+          - (int) loc: grid number between 0 and 63 (inclusive). this represents
+                       the tile the piece is on.
+          - (bool) isKinged: king status of checkers piece.
+          - (bool) hasMoved: has the piece moved yet?
+          - (bool) isChessPiece: true if chess piece, false otherwise.
+        */
         var piece = new Sprite(16,16);
         piece.image = (id[0] === 'w') ? game.assets['/public/img/icon1.png'] : 
                         game.assets['/public/img/icon2.png'];
@@ -415,7 +426,7 @@ window.onload = function(){
                 if (game.isLegalMove(activePiece, game.tiles[this.loc], true)) {
                     game.killPiece(this.loc);
                     game.movePiece(activePiece, game.tiles[this.loc], e);
-                    game.resetBoardThing();
+                    game.resetBoardAttributes();
                     return;
                 }
             }
@@ -426,7 +437,10 @@ window.onload = function(){
     }
 
     game.addGameObjects = function(i, j, occupied, pieceFrame, pieceID) {
-        // add a tile to the game and create a pointer to the piece occupying it
+        /* 
+          add a tile to the game and create a pointer to the piece occupying it
+          thank you based god for shallow copying
+        */
         var tile = game.createTile(i,j,occupied),
             piece = game.createPiece(i,j,pieceFrame,pieceID);
         tile.piece = piece;
@@ -439,10 +453,10 @@ window.onload = function(){
         // for for for for for for for
         // create tiles and pieces
         for (var i=0; i<8; i++) {
-            game.addGameObjects(i,0,true,frames[i],idBlack[i]);
+            game.addGameObjects(i,0,true,frames[i],'b'+IDs[i]);
             game.addGameObjects(i,1,true,5,'bp');
             game.addGameObjects(i,6,true,5,'wp');
-            game.addGameObjects(i,7,true,frames[i],idWhite[i]);
+            game.addGameObjects(i,7,true,frames[i],'w'+IDs[i]);
         }
         for (var j=2; j<6; j++) {
             for (var i=0; i<8; i++) {
