@@ -19,7 +19,7 @@ window.onload = function(){
         IDs = ['r','h','b','q','k','b','h','r'];
 
     game.tiles = {}; // {gridNumber: tileObject}
-    game.pieces = {}; // {gridNumber: pieceObject}
+    game.pieces = {}; // {gridNumber: pieceObject}; this isn't really used but is needed once.
 
     game.movePiece = function(piece, tile, e) {
         /* moves a piece from its current location to tile's location */
@@ -159,7 +159,7 @@ window.onload = function(){
 
     game.checkLegalKing = function(locPiece, locTile, hasMoved, occupied, pieceID) {
         /*
-          checks to see if a king can move legally2.
+          checks to see if a king can move legally.
         */
         var diff = locTile-locPiece,
             locRook;
@@ -343,6 +343,8 @@ window.onload = function(){
         
         tile.addEventListener(Event.TOUCH_START, function(e) {
 
+            console.log(this.occupied)
+
             if (game.isPieceSelected) {
                 piece = game.activePiece;
 
@@ -375,6 +377,7 @@ window.onload = function(){
                     if (flag) {
                         var locKilledPiece = parseInt(Math.abs(locPiece+locTile)/2);
                         game.killPiece(locKilledPiece);
+                        game.resetTileState(locKilledPiece);
                         game.movePiece(piece, tile, e);
                         game.resetBoardAttributes();
                         return;
@@ -411,8 +414,6 @@ window.onload = function(){
         
         piece.addEventListener(Event.TOUCH_END, function(e) {
 
-            console.log(piece.id);
-
             if (game.isPieceSelected) {
                 var activePiece = game.activePiece;
 
@@ -425,6 +426,7 @@ window.onload = function(){
 
                 if (game.isLegalMove(activePiece, game.tiles[this.loc], true)) {
                     game.killPiece(this.loc);
+                    game.resetTileState(activePiece.loc);
                     game.movePiece(activePiece, game.tiles[this.loc], e);
                     game.resetBoardAttributes();
                     return;
